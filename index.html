@@ -18,8 +18,10 @@
   <h1>Auftragserfassung</h1>
   <div class="section">
     <form id="orderForm">
-      <label>Kunde:</label>
-      <input type="text" id="kunde" required>
+      <label>Bestandskunde:</label>
+      <select id="kundeSelect" onchange="fuelleKundendaten()">
+        <option value="">Kunde auswählen</option>
+      </select>
 
       <label>Straße + Hausnummer:</label>
       <input type="text" id="strasse" required>
@@ -43,8 +45,8 @@
       <textarea id="notiz"></textarea>
 
       <h2>Artikel erfassen</h2>
-      <input type="text" id="artikelnummer" placeholder="Artikelnummer scannen/eingeben">
-      <input type="text" id="artikelname" placeholder="Artikelname">
+      <input type="text" id="artikelnummer" placeholder="Artikelnummer scannen/eingeben" oninput="fuelleArtikelname()">
+      <input type="text" id="artikelname" placeholder="Artikelname" readonly>
       <input type="number" id="anzahl" placeholder="Anzahl" min="1">
       <button type="button" onclick="addArticle()">Artikel hinzufügen</button>
 
@@ -70,8 +72,50 @@
   </div>
 
   <script>
-    let artikelListe = [];
+    const kunden = [
+      { name: "2SINNE C.Aigner&M.Kerschbaumer GbR", strasse: "Herzogstr.12", plz: "80803", ort: "München", email: "mcb@2sinne.de", telefon: "" },
+      { name: "34 Oct EURL LA MARCHANDE D'OUBLI", strasse: "41 rue de Paris", plz: "78490", ort: "", email: "mazellelou@me.com", telefon: "" }
+    ];
+
+    const artikel = [
+      { nummer: "47793127576", name: "Dip Dye Neon * Apple Crisp" },
+      { nummer: "641827131555", name: "Dip Dye Neon * Peach Fuzz" }
+    ];
+
     const alleAuftraege = [];
+    let artikelListe = [];
+
+    window.onload = () => {
+      const kundeSelect = document.getElementById("kundeSelect");
+      kunden.forEach(k => {
+        const opt = document.createElement("option");
+        opt.value = k.name;
+        opt.textContent = k.name;
+        kundeSelect.appendChild(opt);
+      });
+    };
+
+    function fuelleKundendaten() {
+      const kName = document.getElementById("kundeSelect").value;
+      const k = kunden.find(k => k.name === kName);
+      if (k) {
+        document.getElementById("strasse").value = k.strasse;
+        document.getElementById("plz").value = k.plz;
+        document.getElementById("ort").value = k.ort;
+        document.getElementById("email").value = k.email;
+        document.getElementById("telefon").value = k.telefon;
+      }
+    }
+
+    function fuelleArtikelname() {
+      const eingabe = document.getElementById("artikelnummer").value.trim();
+      const a = artikel.find(a => a.nummer === eingabe);
+      if (a) {
+        document.getElementById("artikelname").value = a.name;
+      } else {
+        document.getElementById("artikelname").value = "";
+      }
+    }
 
     function addArticle() {
       const nr = document.getElementById('artikelnummer').value.trim();
@@ -97,7 +141,7 @@
         return;
       }
 
-      const kunde = document.getElementById('kunde').value;
+      const kunde = document.getElementById('kundeSelect').value;
       const strasse = document.getElementById('strasse').value;
       const plz = document.getElementById('plz').value;
       const ort = document.getElementById('ort').value;
@@ -136,4 +180,12 @@
         csv += `${a.kunde},${a.strasse},${a.plz},${a.ort},${a.email},${a.telefon},${a.lieferdatum},${a.notiz},${a.artikelnummer},${a.artikelname},${a.anzahl}\n`;
       });
 
-      const blob = new Blob([csv], {
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `alle_auftraege_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
