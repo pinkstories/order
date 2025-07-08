@@ -85,15 +85,13 @@
     const alleAuftraege = [];
     let artikelListe = [];
 
-    window.onload = () => {
-      const kundeSelect = document.getElementById("kundeSelect");
-      kunden.forEach(k => {
-        const opt = document.createElement("option");
-        opt.value = k.name;
-        opt.textContent = k.name;
-        kundeSelect.appendChild(opt);
-      });
-    };
+    const kundeSelect = document.getElementById("kundeSelect");
+    kunden.forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k.name;
+      opt.textContent = k.name;
+      kundeSelect.appendChild(opt);
+    });
 
     function fuelleKundendaten() {
       const kName = document.getElementById("kundeSelect").value;
