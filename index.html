@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messe-Auftragserfassung</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; }
+    input, textarea, select, button { width: 100%; margin: 0.5rem 0; padding: 0.5rem; font-size: 1rem; }
+    table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>Auftragserfassung</h1>
+  <form id="orderForm">
+    <label>Kunde:</label>
+    <input type="text" id="kunde" required>
+
+    <label>Straße + Hausnummer:</label>
+    <input type="text" id="strasse" required>
+
+    <label>PLZ:</label>
+    <input type="text" id="plz" required>
+
+    <label>Ort:</label>
+    <input type="text" id="ort" required>
+
+    <label>E-Mail:</label>
+    <input type="email" id="email">
+
+    <label>Telefon:</label>
+    <input type="text" id="telefon">
+
+    <label>Lieferdatum:</label>
+    <input type="date" id="lieferdatum">
+
+    <label>Notiz:</label>
+    <textarea id="notiz"></textarea>
+
+    <h2>Artikel erfassen</h2>
+    <input type="text" id="artikelnummer" placeholder="Artikelnummer scannen/eingeben">
+    <input type="text" id="artikelname" placeholder="Artikelname">
+    <input type="number" id="anzahl" placeholder="Anzahl" min="1">
+    <button type="button" onclick="addArticle()">Artikel hinzufügen</button>
+
+    <table id="artikelTabelle">
+      <thead>
+        <tr>
+          <th>Artikelnummer</th>
+          <th>Artikelname</th>
+          <th>Anzahl</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button type="button" onclick="downloadCSV()">CSV herunterladen</button>
+  </form>
+
+  <script>
+    const artikelListe = [];
+
+    function addArticle() {
+      const nr = document.getElementById('artikelnummer').value.trim();
+      const name = document.getElementById('artikelname').value.trim();
+      const anzahl = document.getElementById('anzahl').value;
+
+      if (nr && name && anzahl > 0) {
+        artikelListe.push({ nr, name, anzahl });
+
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${nr}</td><td>${name}</td><td>${anzahl}</td>`;
+        document.querySelector('#artikelTabelle tbody').appendChild(row);
+
+        document.getElementById('artikelnummer').value = '';
+        document.getElementById('artikelname').value = '';
+        document.getElementById('anzahl').value = '';
+      }
+    }
+
+    function downloadCSV() {
+      const kunde = document.getElementById('kunde').value;
+      const strasse = document.getElementById('strasse').value;
+      const plz = document.getElementById('plz').value;
+      const ort = document.getElementById('ort').value;
+      const email = document.getElementById('email').value;
+      const telefon = document.getElementById('telefon').value;
+      const lieferdatum = document.getElementById('lieferdatum').value;
+      const notiz = document.getElementById('notiz').value;
+
+      let csv = 'Kunde,Straße,PLZ,Ort,E-Mail,Telefon,Lieferdatum,Notiz,Artikelnummer,Artikelname,Anzahl\n';
+
+      artikelListe.forEach(a => {
+        csv += `${kunde},${strasse},${plz},${ort},${email},${telefon},${lieferdatum},${notiz},${a.nr},${a.name},${a.anzahl}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `auftrag_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+  </script>
+</body>
+</html>
