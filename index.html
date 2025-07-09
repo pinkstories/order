@@ -33,16 +33,26 @@
         </select>
       </div>
 
+      <label>Firmenname:</label>
+      <input type="text" id="firma" />
+      <label>Vorname:</label>
+      <input type="text" id="vorname" />
+      <label>Nachname:</label>
+      <input type="text" id="nachname" />
       <label>Straße + Hausnummer:</label>
       <input type="text" id="strasse" required />
       <label>PLZ:</label>
       <input type="text" id="plz" required />
       <label>Ort:</label>
       <input type="text" id="ort" required />
+      <label>Land:</label>
+      <input type="text" id="land" value="Deutschland" />
       <label>E-Mail:</label>
       <input type="email" id="email" />
       <label>Telefon:</label>
       <input type="text" id="telefon" />
+      <label>USt-IdNr. (nur außerhalb DE/EU):</label>
+      <input type="text" id="ustid" />
       <label>Lieferdatum:</label>
       <input type="date" id="lieferdatum" />
       <label>Notiz:</label>
@@ -74,10 +84,14 @@
           <th>Artikelnummer</th>
           <th>Artikelname</th>
           <th>Anzahl</th>
+          <th>Einzelpreis (€)</th>
+          <th>Gesamtpreis (€)</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+
+    <h3>Aktueller Auftragswert: <span id="gesamtwert">0.00 €</span></h3>
 
     <button type="button" onclick="saveOrder()">Auftrag speichern</button>
     <button type="button" onclick="zeigeKundendatenMaske()">Zurück</button>
@@ -89,25 +103,27 @@
   </div>
 
   <script>
-    const kunden = [
-      { name: "2SINNE C.Aigner&M.Kerschbaumer GbR", strasse: "Herzogstr.12", plz: "80803", ort: "München", email: "mcb@2sinne.de", telefon: "" },
-      { name: "34 Oct EURL LA MARCHANDE D'OUBLI", strasse: "41 rue de Paris", plz: "78490", ort: "", email: "mazellelou@me.com", telefon: "" }
-    ];
+    let kunden = [];
+    fetch("kunden.json")
+      .then(res => res.json())
+      .then(data => {
+        kunden = data;
+        const select = document.getElementById("kundeSelect");
+        kunden.forEach(k => {
+          const opt = document.createElement("option");
+          opt.value = k.name;
+          opt.textContent = k.name;
+          select.appendChild(opt);
+        });
+      });
 
-    const artikel = [
-      { nummer: "047793127576", name: "Dip Dye Neon * Apple Crisp" },
-      { nummer: "0641827131555", name: "Dip Dye Neon * Peach Fuzz" }
-    ];
+    let artikel = [];
+    fetch("artikel.json")
+      .then(res => res.json())
+      .then(data => artikel = data);
 
     const alleAuftraege = [];
     let artikelListe = [];
-
-    kunden.forEach(k => {
-      const opt = document.createElement("option");
-      opt.value = k.name;
-      opt.textContent = k.name;
-      document.getElementById("kundeSelect").appendChild(opt);
-    });
 
     function startForm(isBestandskunde) {
       document.getElementById("startScreen").classList.remove("visible");
@@ -125,18 +141,6 @@
       document.getElementById("kundendaten").classList.add("visible");
     }
 
-    function fuelleKundendaten() {
-      const kName = document.getElementById("kundeSelect").value;
-      const k = kunden.find(k => k.name === kName);
-      if (k) {
-        document.getElementById("strasse").value = k.strasse;
-        document.getElementById("plz").value = k.plz;
-        document.getElementById("ort").value = k.ort;
-        document.getElementById("email").value = k.email;
-        document.getElementById("telefon").value = k.telefon;
-      }
-    }
-
     function fuelleArtikelname() {
       const eingabe = document.getElementById("artikelnummer").value.trim().replace(/^0+/, "");
       clearTimeout(window.scanTimer);
@@ -145,7 +149,7 @@
         const a = artikel.find(a => a.nummer.replace(/^0+/, "") === eingabe);
         if (a) {
           document.getElementById("artikelname").value = a.name;
-          document.getElementById("anzahl").value = 1;
+          document.getElementById("anzahl").value = a.einheit || 1;
           addArticle();
         }
       }, 500);
@@ -160,26 +164,25 @@
     function handleEnter(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        const eingabe = document.getElementById("artikelnummer").value.trim().replace(/^0+/, "");
-        const a = artikel.find(a => a.nummer.replace(/^0+/, "") === eingabe);
-        if (a) {
-          document.getElementById("artikelname").value = a.name;
-          document.getElementById("anzahl").value = 1;
-          addArticle();
-        }
+        fuelleArtikelname();
       }
     }
 
     function addArticle() {
       const nr = document.getElementById('artikelnummer').value.trim().replace(/^0+/, "");
       const name = document.getElementById('artikelname').value.trim();
-      const anzahl = document.getElementById('anzahl').value;
+      const anzahl = parseInt(document.getElementById('anzahl').value);
+      const artikelEintrag = artikel.find(a => a.nummer.replace(/^0+/, "") === nr);
+      const preis = artikelEintrag?.preis || 0;
 
       if (nr && name && anzahl > 0) {
-        artikelListe.push({ nr, name, anzahl });
+        const gesamt = (preis * anzahl).toFixed(2);
+        artikelListe.push({ nr, name, anzahl, preis, gesamt });
         const row = document.createElement('tr');
-        row.innerHTML = `<td>${nr}</td><td>${name}</td><td>${anzahl}</td>`;
+        row.innerHTML = `<td>${nr}</td><td>${name}</td><td>${anzahl}</td><td>${preis.toFixed(2)}</td><td>${gesamt}</td>`;
         document.querySelector('#artikelTabelle tbody').appendChild(row);
+
+        aktualisiereGesamtwert();
 
         document.getElementById('artikelnummer').value = '';
         document.getElementById('artikelname').value = '';
@@ -187,30 +190,41 @@
       }
     }
 
+    function aktualisiereGesamtwert() {
+      const summe = artikelListe.reduce((acc, a) => acc + parseFloat(a.gesamt), 0);
+      document.getElementById("gesamtwert").textContent = `${summe.toFixed(2)} €`;
+    }
+
     function saveOrder() {
       const kunde = document.getElementById('kundeSelect').value || "Neukunde";
+      const firma = document.getElementById('firma').value;
+      const vorname = document.getElementById('vorname').value;
+      const nachname = document.getElementById('nachname').value;
       const strasse = document.getElementById('strasse').value;
       const plz = document.getElementById('plz').value;
       const ort = document.getElementById('ort').value;
+      const land = document.getElementById('land').value;
       const email = document.getElementById('email').value;
       const telefon = document.getElementById('telefon').value;
+      const ustid = document.getElementById('ustid').value;
       const lieferdatum = document.getElementById('lieferdatum').value;
       const notiz = document.getElementById('notiz').value;
 
       artikelListe.forEach(a => {
         alleAuftraege.push({
-          kunde, strasse, plz, ort, email, telefon, lieferdatum, notiz,
-          artikelnummer: a.nr, artikelname: a.name, anzahl: a.anzahl
+          kunde, firma, vorname, nachname, strasse, plz, ort, land, email, telefon, ustid, lieferdatum, notiz,
+          artikelnummer: a.nr, artikelname: a.name, anzahl: a.anzahl, einzelpreis: a.preis, gesamtpreis: a.gesamt
         });
       });
 
       const eintrag = document.createElement('li');
-      eintrag.textContent = `${kunde} – ${artikelListe.length} Artikel gespeichert`;
+      eintrag.textContent = `${firma || kunde} – ${artikelListe.length} Artikel gespeichert`;
       document.getElementById('auftragsListe').appendChild(eintrag);
 
       artikelListe = [];
       document.querySelector('#artikelTabelle tbody').innerHTML = '';
       document.getElementById('orderForm').reset();
+      document.getElementById("gesamtwert").textContent = "0.00 €";
       document.getElementById("startScreen").classList.add("visible");
       document.getElementById("artikelmaske").classList.remove("visible");
     }
