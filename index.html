@@ -18,7 +18,42 @@
 <body>
   <h1>Auftragserfassung</h1>
 
-  <div class="section visible" id="artikelmaske">
+  <div id="startScreen" class="visible">
+    <p>Ist der Kunde bereits vorhanden?</p>
+    <button onclick="startForm(true)">Bestandskunde</button>
+    <button onclick="startForm(false)">Neukunde</button>
+  </div>
+
+  <div id="kundendaten" class="section">
+    <form id="orderForm">
+      <div id="bestandskundeSection">
+        <label>Bestandskunde:</label>
+        <select id="kundeSelect" onchange="fuelleKundendaten()">
+          <option value="">Kunde auswählen</option>
+        </select>
+      </div>
+
+      <label>Straße + Hausnummer:</label>
+      <input type="text" id="strasse" required />
+      <label>PLZ:</label>
+      <input type="text" id="plz" required />
+      <label>Ort:</label>
+      <input type="text" id="ort" required />
+      <label>E-Mail:</label>
+      <input type="email" id="email" />
+      <label>Telefon:</label>
+      <input type="text" id="telefon" />
+      <label>Lieferdatum:</label>
+      <input type="date" id="lieferdatum" />
+      <label>Notiz:</label>
+      <textarea id="notiz"></textarea>
+
+      <button type="button" onclick="zeigeArtikelmaske()">Weiter zu Artikeln</button>
+      <button type="button" onclick="zurueckZumStart()">Zurück</button>
+    </form>
+  </div>
+
+  <div id="artikelmaske" class="section">
     <h2>Artikel erfassen</h2>
     <input
       type="text"
@@ -43,15 +78,64 @@
       </thead>
       <tbody></tbody>
     </table>
+
+    <button type="button" onclick="saveOrder()">Auftrag speichern</button>
+    <button type="button" onclick="zeigeKundendatenMaske()">Zurück</button>
+  </div>
+
+  <div class="section visible">
+    <h2>Gespeicherte Aufträge</h2>
+    <ul id="auftragsListe"></ul>
   </div>
 
   <script>
+    const kunden = [
+      { name: "2SINNE C.Aigner&M.Kerschbaumer GbR", strasse: "Herzogstr.12", plz: "80803", ort: "München", email: "mcb@2sinne.de", telefon: "" },
+      { name: "34 Oct EURL LA MARCHANDE D'OUBLI", strasse: "41 rue de Paris", plz: "78490", ort: "", email: "mazellelou@me.com", telefon: "" }
+    ];
+
     const artikel = [
       { nummer: "047793127576", name: "Dip Dye Neon * Apple Crisp" },
       { nummer: "0641827131555", name: "Dip Dye Neon * Peach Fuzz" }
     ];
 
+    const alleAuftraege = [];
     let artikelListe = [];
+
+    kunden.forEach(k => {
+      const opt = document.createElement("option");
+      opt.value = k.name;
+      opt.textContent = k.name;
+      document.getElementById("kundeSelect").appendChild(opt);
+    });
+
+    function startForm(isBestandskunde) {
+      document.getElementById("startScreen").classList.remove("visible");
+      document.getElementById("kundendaten").classList.add("visible");
+      document.getElementById("bestandskundeSection").style.display = isBestandskunde ? 'block' : 'none';
+    }
+
+    function zeigeArtikelmaske() {
+      document.getElementById("kundendaten").classList.remove("visible");
+      document.getElementById("artikelmaske").classList.add("visible");
+    }
+
+    function zeigeKundendatenMaske() {
+      document.getElementById("artikelmaske").classList.remove("visible");
+      document.getElementById("kundendaten").classList.add("visible");
+    }
+
+    function fuelleKundendaten() {
+      const kName = document.getElementById("kundeSelect").value;
+      const k = kunden.find(k => k.name === kName);
+      if (k) {
+        document.getElementById("strasse").value = k.strasse;
+        document.getElementById("plz").value = k.plz;
+        document.getElementById("ort").value = k.ort;
+        document.getElementById("email").value = k.email;
+        document.getElementById("telefon").value = k.telefon;
+      }
+    }
 
     function fuelleArtikelname() {
       const eingabe = document.getElementById("artikelnummer").value.trim().replace(/^0+/, "");
@@ -101,6 +185,39 @@
         document.getElementById('artikelname').value = '';
         document.getElementById('anzahl').value = '';
       }
+    }
+
+    function saveOrder() {
+      const kunde = document.getElementById('kundeSelect').value || "Neukunde";
+      const strasse = document.getElementById('strasse').value;
+      const plz = document.getElementById('plz').value;
+      const ort = document.getElementById('ort').value;
+      const email = document.getElementById('email').value;
+      const telefon = document.getElementById('telefon').value;
+      const lieferdatum = document.getElementById('lieferdatum').value;
+      const notiz = document.getElementById('notiz').value;
+
+      artikelListe.forEach(a => {
+        alleAuftraege.push({
+          kunde, strasse, plz, ort, email, telefon, lieferdatum, notiz,
+          artikelnummer: a.nr, artikelname: a.name, anzahl: a.anzahl
+        });
+      });
+
+      const eintrag = document.createElement('li');
+      eintrag.textContent = `${kunde} – ${artikelListe.length} Artikel gespeichert`;
+      document.getElementById('auftragsListe').appendChild(eintrag);
+
+      artikelListe = [];
+      document.querySelector('#artikelTabelle tbody').innerHTML = '';
+      document.getElementById('orderForm').reset();
+      document.getElementById("startScreen").classList.add("visible");
+      document.getElementById("artikelmaske").classList.remove("visible");
+    }
+
+    function zurueckZumStart() {
+      document.getElementById("kundendaten").classList.remove("visible");
+      document.getElementById("startScreen").classList.add("visible");
     }
   </script>
 </body>
