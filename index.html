@@ -93,6 +93,10 @@
 
     <h3>Aktueller Auftragswert: <span id="gesamtwert">0.00 €</span></h3>
 
+    <label>Gewünschtes Lieferdatum:</label>
+    <input type="date" id="abschluss_lieferdatum" />
+    <label>Notiz zum Auftrag:</label>
+    <textarea id="abschluss_notiz"></textarea>
     <button type="button" onclick="saveOrder()">Auftrag speichern</button>
     <button type="button" onclick="zeigeKundendatenMaske()">Zurück</button>
   </div>
@@ -209,11 +213,15 @@
       const ustid = document.getElementById('ustid').value;
       const lieferdatum = document.getElementById('lieferdatum').value;
       const notiz = document.getElementById('notiz').value;
+      const abschlussLieferdatum = document.getElementById('abschluss_lieferdatum').value;
+      const abschlussNotiz = document.getElementById('abschluss_notiz').value;
 
       artikelListe.forEach(a => {
         alleAuftraege.push({
           kunde, firma, vorname, nachname, strasse, plz, ort, land, email, telefon, ustid, lieferdatum, notiz,
-          artikelnummer: a.nr, artikelname: a.name, anzahl: a.anzahl, einzelpreis: a.preis, gesamtpreis: a.gesamt
+          artikelnummer: a.nr, artikelname: a.name, anzahl: a.anzahl, einzelpreis: a.preis, gesamtpreis: a.gesamt,
+          abschlussLieferdatum,
+          abschlussNotiz
         });
       });
 
