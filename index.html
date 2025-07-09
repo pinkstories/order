@@ -158,15 +158,15 @@ fetch("kunden.json")
     const select = document.getElementById("kundeSelect");
     kunden.forEach(k => {
       const opt = document.createElement("option");
-      opt.value = k.name;
-      opt.textContent = k.name;
+      opt.value = k.name.replace(/^\*/, '').trim();
+      opt.textContent = k.name.replace(/^\*/, '').trim();
       select.appendChild(opt);
     });
   });
 
 function fuelleKundendaten() {
   const auswahl = document.getElementById("kundeSelect").value;
-  const kunde = kunden.find(k => k.name === auswahl);
+  const kunde = kunden.find(k => k.name.replace(/^\*/, '').trim() === auswahl);
   if (kunde) {
     document.getElementById("firma").value = kunde.name || "";
     document.getElementById("vorname").value = kunde.vorname || "";
