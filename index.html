@@ -55,7 +55,7 @@
     let artikelListe = [];
 
     function fuelleArtikelname() {
-      const eingabe = document.getElementById("artikelnummer").value.trim();
+      const eingabe = document.getElementById("artikelnummer").value.trim().replace(/^0+/, "");
       clearTimeout(window.scanTimer);
       if (!eingabe) return;
       window.scanTimer = setTimeout(() => {
@@ -77,7 +77,7 @@
     function handleEnter(e) {
       if (e.key === "Enter") {
         e.preventDefault();
-        const eingabe = document.getElementById("artikelnummer").value.trim();
+        const eingabe = document.getElementById("artikelnummer").value.trim().replace(/^0+/, "");
         const a = artikel.find(a => a.nummer === eingabe);
         if (a) {
           document.getElementById("artikelname").value = a.name;
@@ -88,7 +88,7 @@
     }
 
     function addArticle() {
-      const nr = document.getElementById('artikelnummer').value.trim();
+      const nr = document.getElementById('artikelnummer').value.trim().replace(/^0+/, "");
       const name = document.getElementById('artikelname').value.trim();
       const anzahl = document.getElementById('anzahl').value;
 
