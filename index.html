@@ -110,6 +110,12 @@
   </div>
 
   <script>
+    function startForm(isBestandskunde) {
+      document.getElementById("startScreen").classList.remove("visible");
+      document.getElementById("kundendaten").classList.add("visible");
+      document.getElementById("bestandskundeSection").style.display = isBestandskunde ? "block" : "none";
+      wechsleSichtbarkeit("startScreen", "kundendaten");
+    }
     function zeigeArtikelmaske() {
       wechsleSichtbarkeit("kundendaten", "artikelmaske");
     }
